@@ -1,0 +1,2 @@
+GET https://api1.raildata.org.uk/1010-reference-data1_0/LDBSVWS/api/ref/20211101/GetReasonCodeList
+x-apikey: {{x-apikey-reference-data}}
