@@ -1,20 +1,61 @@
-# Overview
+# Information
 
-NRE are the main source of data: https://www.nationalrail.co.uk/about-this-site/.  
-They are part of, and operated by, the RDG: https://www.raildeliverygroup.com/.  
+## Overview
 
-- TRUST is a low level (not consumer friendly) core system for train positions from NRE: https://en.wikipedia.org/wiki/TRUST.  
-- Darwin is built ontop of TRUST as a consumer facing system from RDG: https://www.nationalrail.co.uk/developers/darwin-data-feeds/.  
+There are lots of available open data from all the train networks:  
 
-Typically Darwin is the common way to access data: https://wiki.openraildata.com/index.php/TRUST_vs_Darwin.  
+- https://wiki.openraildata.com/index.php/Main_Page  
+- https://wiki.openraildata.com/index.php/Rail_Data_FAQ  
 
-RDM is a consumer platform for available data endpoints (Darwin, TRUST, CIF scheduling, and lots more).  
+There are many levels of fidelity you can get data:
 
-- https://wiki.openraildata.com/index.php/Main_Page
-- https://wiki.openraildata.com/index.php/Rail_Data_FAQ
+- https://wiki.openraildata.com/index.php/TRUST_vs_Darwin.
+
+TRUST is a low level (not consumer friendly) core system for train positions:
+
+- https://en.wikipedia.org/wiki/TRUST  
+
+Darwin is built ontop of TRUST and many other services as a consumer facing system:
+
+- https://www.nationalrail.co.uk/developers/darwin-data-feeds/  
+
+The low level services, e.g. TRUST, are through Network Rail feeds:
+
 - https://wiki.openraildata.com/index.php/About_the_Network_Rail_feeds
 
-Useful links with some existing projects:
+Darwin is through National Rail Enquiries (NRE) and the Rail Delivery Group (RDG):  
+
+- https://wiki.openraildata.com/index.php/About_the_National_Rail_Feeds  
+- https://www.nationalrail.co.uk/about-this-site/  
+- https://www.raildeliverygroup.com/  
+
+## Rail Delivery Group
+
+RDG provide many data feeds and methods of accessing their data.  
+
+- https://wiki.openraildata.com/index.php/About_the_National_Rail_Feeds
+- https://www.nationalrail.co.uk/developers/darwin-data-feeds/
+
+the Live Departure Boards Web Service (LDBWS) can be accessed through either:
+
+- SOAP API with XML, registered and accessed through the NRE APIs at https://nationalrail.co.uk
+- REST API with JSON, registered and access through Rail Delivery Market (RDM) at https://raildata.org.uk/
+
+This is split into staff and public, where the staff version seems to give more full information.
+
+- https://realtime.nationalrail.co.uk/LDBSVWS/docs/documentation.html
+- https://realtime.nationalrail.co.uk/LDBWS/docs/documentation.html
+
+The real time rail information can be accessed through either:
+
+- Push port with ActiveMQ, STOMP, or XML
+- Kafka stream with JSON, Avro, XML
+
+The modern method seems to be REST and Kafka streams through RDM.
+
+The KnowledgeBase is a static information source for XML data.
+
+## Other Links
 
 - https://github.com/openraildata
 - https://datasciencecampus.ons.gov.uk/visualising-rail-schedules-using-open-data/
@@ -22,19 +63,24 @@ Useful links with some existing projects:
 - https://heigit.org/an-ohsome-railway-network-visualization-and-analysis-2/
 - https://en.wikipedia.org/wiki/Shapefile
 
-# Data Products
+## Acronyms
 
-## Live Departure Board (LDB)
+NRE: National Rail Enquiries  
+RDG: Rail Delivery Group  
+RDM: Rail Data Marketplace  
+TOC: Train Operating Company  
+CRS: Computer Reservation Code - uniquely identify railway stations  
+UID: Unique ID - Recurring train service  
+RID: Retail ID - Instance of a train service e.g. specific journey, specific day  
+Service ID: Similar to RID  
+SDD: Schedule Data Directory - schedule information ID for a service  
+TIPLOC: Timing Point Location  
+CIS: Customer Interface System  
+TRUST: Train Running System TOPS  
 
-One of the main data feeds of Darwin from RDG split into a Public Version (PV) and Staff Version (SV).  
-Each API is split up into multiple data products on https://raildata.org.uk with seperate API endpoints and keys.  
+# Open Data
 
-- https://realtime.nationalrail.co.uk/LDBSVWS/docs/documentation.html
-- https://realtime.nationalrail.co.uk/LDBWS/docs/documentation.html
-
-It seems better to blanket  use the staff versions as then have canonical RIDs / UIDs etc and include most of the same information.  
-
-### Reference Data (SV)  
+## LDBWS SV: Reference Data
 
 - Station CRS  ->  Name
 - Company TOC  ->  Name
@@ -48,7 +94,7 @@ It seems better to blanket  use the staff versions as then have canonical RIDs /
 - https://api1.raildata.org.uk/1010-reference-data1_0/LDBSVWS/api/ref/20211101/GetReasonCode/{reasonCode}
 - https://api1.raildata.org.uk/1010-reference-data1_0/LDBSVWS/api/ref/20211101/GetSourceInstanceNames
 
-### Query Services (SV)  
+## LDBWS SV: Query Services  
 
 - Route UID + schedule SDD  ->  Relevant service instances (RID, UID, SDD, train ID, other)
 - Instance RID              ->  Service (RID, operator, train ID, other) + List of Locations (TIPLOC, CRS, platforms, times)
@@ -58,7 +104,7 @@ It seems better to blanket  use the staff versions as then have canonical RIDs /
 - https://api1.raildata.org.uk/1010-query-services-and-service-details1_0/LDBSVWS/api/20220120/QueryServices/{serviceID}/{sdd}
 - https://api1.raildata.org.uk/1010-query-services-and-service-details1_0/LDBSVWS/api/20220120/GetServiceDetailsByRID/{rid}
 
-### Arr and Dep Boards (SV)  
+## LDBWS SV: Arrivals and Departures Boards
 
 - Station CRS + Time  ->  Relevant service instances (RID, UID, SDD, train ID, other)
 
@@ -68,7 +114,7 @@ It seems better to blanket  use the staff versions as then have canonical RIDs /
 - https://api1.raildata.org.uk/1010-live-arrival-and-departure-boards---staff-version1_0/LDBSVWS/api/20220120/GetArrivalDepartureBoardByCRS/{crs}/{time}
 - https://api1.raildata.org.uk/1010-live-arrival-and-departure-boards---staff-version1_0/LDBSVWS/api/20220120/GetArrivalDepartureBoardByTIPLOC/{tiploc}/{time}
 
-### Arr and Dep Boards (PV)  
+## LDBWS PV: Arrivals and Departures Boards  
 
 - Station CRS  ->  Service info (service ID, other)
 
@@ -77,7 +123,7 @@ It seems better to blanket  use the staff versions as then have canonical RIDs /
 - https://api1.raildata.org.uk/1010-live-arrival-and-departure-boards-arr-and-dep1_1/LDBWS/api/20220120/GetArrDepBoardWithDetails/{crs}
 - https://api1.raildata.org.uk/1010-live-arrival-and-departure-boards-arr-and-dep1_1/LDBWS/api/20220120/GetArrivalDepartureBoard/{crs}
 
-### Service Details (PV)  
+## LDBWS PV: Service Details
 
 - Service ID  ->  Service info (service ID, other)
 
@@ -85,9 +131,7 @@ It seems better to blanket  use the staff versions as then have canonical RIDs /
 
 - https://api1.raildata.org.uk/1010-service-details1_2/LDBWS/api/20220120/GetServiceDetails/{serviceid}
 
-## Downloadable Files
-
-### Knowledgeable Stations
+## KnowledgeBase: Stations Data
 
 Full information of each station.
 
@@ -95,35 +139,21 @@ Full information of each station.
 
 📋 https://raildata.org.uk/dashboard/dataProduct/P-88ffe920-471c-4fd9-8e0d-95d5b9b7a257/overview
 
-### Darwin Timetable Files
+## Other: Darwin Timetable Files
 
 Services / SSDs are retrievable from the timetable files.
 
 📋 https://raildata.org.uk/dashboard/dataProduct/P-9ca6bc7e-62e1-44d6-b93a-1616f7d2caf8/overview  
 
-### Station Reference Data
+## Other: Station Reference Data
 
 Big list of general data for each station.
 
 📋 https://raildata.org.uk/dashboard/dataProduct/P-bc13af96-8ca5-484a-be47-2ee0a3251b01/overview 
 
-### NWR Track Model
+## Other: NWR Track Model
 
 Up to date track model.  
 
 📋 https://raildata.org.uk/dashboard/dataProduct/P-9b4e960e-8bb6-438b-9722-34ae5768a48f/overview
 
-# Acronyms
-
-NRE: National Rail Enquiries
-RDG: Rail Delivery Group
-RDM: Rail Data Marketplace
-TOC: Train Operating Company
-CRS: Computer Reservation Code - uniquely identify railway stations
-UID: Unique ID - Recurring train service
-RID: Retail ID - Instance of a train service e.g. specific journey, specific day
-Service ID: Similar to RID
-SDD: Schedule Data Directory - schedule information ID for a service
-TIPLOC: Timing Point Location
-CIS: Customer Interface System
-TRUST: Train Running System TOPS
