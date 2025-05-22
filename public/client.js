@@ -4,13 +4,28 @@ const CAM_ZOOM_THRESHOLD = 0.01;
 const CAM_ZOOM_MIN = 0.5;
 const CAM_ZOOM_MAX = 50;
 const MAP_TARGET_HEIGHT = 1000;
-const WORLD_IMAGE_SCALE = 8;
+
+// Hardcoded based on the map image
+const MAP_WIDTH_LON = 10.3;
+const MAP_HEIGHT_LAT = 10.8;
+const MAP_CENTRE_LON = -3.5;
+const MAP_CENTRE_LAT = 55.8;
 
 const windowDPR = window.devicePixelRatio || 1;
 const canvas = document.getElementById("map");
 const ctx = canvas.getContext("2d");
+let lonWorldUnit = 0, latWorldUnit = 0;
 let data = null;
-let mapAsset = { image: null, outputScale: 1, outputW: 0, outputH: 0, centreX: 0, centreY: 0 };
+let mapAsset = {
+	image: null,
+	outputScale: 1,
+	outputW: 0,
+	outputH: 0,
+	centreX: 0,
+	centreY: 0,
+	lonUnit: 0,
+	latUnit: 0,
+};
 let camera = {
 	scale: 1,
 	translate: { x: 0, y: 0 },
@@ -57,6 +72,13 @@ function convertWorldToScreen(pos) {
 	return {
 		x: pos.x * camera.scale + camera.translate.x,
 		y: pos.y * camera.scale + camera.translate.y,
+	};
+}
+
+function convertLonLatToWorld(lon, lat) {
+	return {
+		x: (lon - MAP_CENTRE_LON) * lonWorldUnit,
+		y: -(lat - MAP_CENTRE_LAT) * latWorldUnit
 	};
 }
 
@@ -146,7 +168,6 @@ function updateAndApplyCamera() {
 // ----------------------------------------- MAIN ---------------------------------------------
 
 async function setup() {
-	// Load the map SVG, convert it to an image, and calculate scaling
 	mapAsset.image = new Image();
 	mapAsset.image.src = "assets/map_4x.png";
 	await new Promise((resolve) => {
@@ -157,7 +178,10 @@ async function setup() {
 	mapAsset.outputW = mapAsset.image.width * mapAsset.outputScale;
 	mapAsset.outputH = mapAsset.image.height * mapAsset.outputScale;
 	mapAsset.centreX = -mapAsset.outputW * 0.5;
-	mapAsset.centreY = -mapAsset.outputH * 0.55;
+	mapAsset.centreY = -mapAsset.outputH * 0.5;
+	
+	lonWorldUnit = mapAsset.outputW / MAP_WIDTH_LON;
+	latWorldUnit = mapAsset.outputH / MAP_HEIGHT_LAT;
 
 	const response = await fetch("/api/trains");
 	data = await response.json();
@@ -173,6 +197,19 @@ function update() {
 
 	ctx.imageSmoothingEnabled = false;
 	ctx.drawImage(mapAsset.image, mapAsset.centreX, mapAsset.centreY, mapAsset.outputW, mapAsset.outputH);
+
+	ctx.beginPath();
+	ctx.arc(0, 0, 2, 0, Math.PI * 2);
+	ctx.fillStyle = "white";
+	ctx.fill();
+	ctx.closePath();
+
+	const habroughWorldPos = convertLonLatToWorld(-0.267975846, 53.60553503);
+	ctx.beginPath();
+	ctx.arc(habroughWorldPos.x, habroughWorldPos.y, 2, 0, Math.PI * 2);
+	ctx.fillStyle = "red";
+	ctx.fill();
+	ctx.closePath();
 }
 
 // ----------------------------------------- DRIVER ---------------------------------------------
