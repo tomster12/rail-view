@@ -1,2 +1,0 @@
-GET https://api1.raildata.org.uk/1010-service-details1_2/LDBWS/api/20220120/GetServiceDetails/2074293HABRO___
-x-apikey: {{x-apikey-service-details-pv}}

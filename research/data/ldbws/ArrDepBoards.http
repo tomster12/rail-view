@@ -1,0 +1,12 @@
+GET https://api1.raildata.org.uk/1010-live-arrival-and-departure-boards---staff-version1_0/LDBSVWS/api/20220120/GetArrDepBoardWithDetails/HAB/20250521T200000
+x-apikey: {{x-apikey-arr-dep-boards}}
+
+###
+
+GET https://api1.raildata.org.uk/1010-live-arrival-and-departure-boards---staff-version1_0/LDBSVWS/api/20220120/GetArrivalDepartureBoardByCRS/HAB/20250521T200000
+x-apikey: {{x-apikey-arr-dep-boards}}
+
+###
+
+GET https://api1.raildata.org.uk/1010-live-arrival-and-departure-boards---staff-version1_0/LDBSVWS/api/20220120/GetArrivalDepartureBoardByTIPLOC/HABRO/20250521T200000
+x-apikey: {{x-apikey-arr-dep-boards}}

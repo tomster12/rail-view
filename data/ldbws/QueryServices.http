@@ -1,7 +1,0 @@
-GET https://api1.raildata.org.uk/1010-query-services-and-service-details1_0/LDBSVWS/api/20220120/QueryServices/C27050/20250521
-x-apikey: {{x-apikey-query-services}}
-
-###
-
-GET https://api1.raildata.org.uk/1010-query-services-and-service-details1_0/LDBSVWS/api/20220120/GetServiceDetailsByRID/202505206727050
-x-apikey: {{x-apikey-query-services}}
