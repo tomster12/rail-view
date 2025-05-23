@@ -1,0 +1,20 @@
+{
+    "name": "git_rail_view",
+    "version": "1.0.0",
+    "description": "A work in progress visualisation of the Darwin open data feeds.",
+    "main": "server.js",
+    "scripts": {
+        "start": "node --env-file .env server.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/tomster12/rail-view.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "homepage": "https://github.com/tomster12/rail-view#readme",
+    "dependencies": {
+        "fast-xml-parser": "^5.2.3"
+    }
+}
