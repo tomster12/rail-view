@@ -16,7 +16,11 @@
 		</style>
 	</head>
 	<body>
-		<canvas id="map"></canvas>
+		<!-- Container and canvas covering the screen 100vw / vh -->
+		<div id="map-container" style="position: relative; width: 100vw; height: 100vh">
+			<canvas id="map" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: transparent"></canvas>
+		</div>
+
 		<script src="client.js"></script>
 	</body>
 </html>
