@@ -5,8 +5,6 @@ const process = require("process");
 const { log } = require("console");
 const { XMLParser } = require("fast-xml-parser");
 
-const TO_PREPROCESS = false;
-
 const URL_REF_STATION_LIST = "https://api1.raildata.org.uk/1010-reference-data1_0/LDBSVWS/api/ref/20211101/GetStationList/1";
 const URL_KB_STATIONS = "https://api1.raildata.org.uk/1010-knowlegebase-stations-xml-feed1_1/4.0/";
 const PORT = 3000;
@@ -19,7 +17,7 @@ const MIME_TYPES = {
 	svg: "image/svg+xml",
 };
 
-let stationsData;
+let stationsInfo;
 
 // ----------------------------------------- UTILITY ---------------------------------------------
 
@@ -103,7 +101,7 @@ async function niceFetch(label, url, apiKey, silent = false) {
 
 // ----------------------------------------- MAIN ---------------------------------------------
 
-async function preprocessStationsData() {
+async function processStationsData() {
 	// Ensure the data directory exists
 	try {
 		await fs.mkdir(DATA_DIR, { recursive: true });
@@ -114,7 +112,7 @@ async function preprocessStationsData() {
 
 	// Check if the station info file already exists
 	const stationsInfoPath = path.join(DATA_DIR, "stationsInfo.json");
-	let stationsInfo = {};
+	stationsInfo = {};
 	try {
 		const fileData = await fs.readFile(stationsInfoPath);
 		stationsInfo = JSON.parse(fileData);
@@ -123,7 +121,7 @@ async function preprocessStationsData() {
 	}
 
 	// Fetch station list if not already present in the station info
-	if (!stationsInfo["list"]) {
+	if (!stationsInfo.list) {
         const listRes = await retry(() =>
             niceFetch("ref station list", URL_REF_STATION_LIST, process.env.RAILVIEW_APIKEY_REF)
         );
@@ -132,21 +130,20 @@ async function preprocessStationsData() {
 			return;
 		}
 		const listJSON = await listRes.json();
-		stationsInfo["list"] = listJSON.StationList.map((station) => station.crs);
-		console.log(`${logHead()}Found ${stationsInfo["list"].length} stations`);
+		stationsInfo.list = listJSON.StationList.map((station) => station.crs);
+		console.log(`${logHead()}Found ${stationsInfo.list.length} stations`);
 	} else {
-		console.log(`${logHead()}Cached station list found with ${stationsInfo["list"].length} stations`);
+		console.log(`${logHead()}Cached station list found with ${stationsInfo.list.length} stations`);
 	}
 
-	if (!stationsInfo["info"]) stationsInfo["info"] = {};
+	if (!stationsInfo.info) stationsInfo.info = {};
 	const parser = new XMLParser();
 	let fetched = 0,
 		failed = 0;
         
     // Concurrently fetch all the station data
-    const toProcess = stationsInfo["list"].filter((crs) => !stationsInfo["info"][crs]);
-    console.log(`${logHead()}Fetching ${toProcess.length} / ${stationsInfo["list"].length} stations...`);
-
+    const toProcess = stationsInfo.list.filter((crs) => !stationsInfo.info[crs]);
+    console.log(`${logHead()}Fetching ${toProcess.length} / ${stationsInfo.list.length} stations...`);
 	await concurrentMap(toProcess, 4, async (crs) => {
 		try {
 			const stationRes = await retry(() =>
@@ -158,14 +155,31 @@ async function preprocessStationsData() {
 			}
 			const stationText = await stationRes.text();
 			const stationParsed = parser.parse(stationText);
-			stationsInfo["info"][crs] = stationParsed["StationV4.0"];
+
+			if (!stationParsed || !stationParsed["StationV4.0"]) {
+				failed++;
+				return;
+			}
+
+			let data = stationParsed["StationV4.0"];
+			data = {
+				crs: data["Crs"],
+				name: data["Name"],
+				latitude: data["Latitude"],
+				longitude: data["Longitude"],
+				platforms: data["Platforms"] ? data["Platforms"]["Platform"] : [],
+				timetableUrl: data["TimetableUrl"] || ""
+			}
+
+			stationsInfo.info[crs] = data;
 			fetched++;
 		} catch (e) {
 			failed++;
 		}
 	});
-
 	console.log(`${logHead()}Finished: ${fetched} fetched, ${failed} failed.`);
+
+	// Save the station data to the JSON file
 	console.log(`${logHead()}Saving station data...`);
 	try {
 		await fs.writeFile(stationsInfoPath, JSON.stringify(stationsInfo, null, 2));
@@ -175,10 +189,10 @@ async function preprocessStationsData() {
 	}
 }
 
-async function preprocess() {
+async function processData() {
 	console.log(`${logHead()}Preprocessing rail data...`);
 
-	await preprocessStationsData();
+	await processStationsData();
 
 	console.log(`${logHead()}Preprocessing complete!`);
 }
@@ -201,25 +215,21 @@ async function handleEndpointStatic(req, res) {
 	}
 }
 
-function handleEndpointTrains(req, res) {
-	const data = JSON.stringify([
-		{ id: "train1", x: 100, y: 150 },
-		{ id: "train2", x: 300, y: 200 },
-	]);
+function handleEndpointStationsInfo(req, res) {
 	res.writeHead(200, { "Content-Type": "application/json" });
-	res.end(data);
+	res.end(JSON.stringify(stationsInfo, null, 2));
 }
 
 // ----------------------------------------- DRIVER ---------------------------------------------
 
 (async () => {
-    if (TO_PREPROCESS) await preprocess();
+    processData();
 
 	const server = http.createServer((req, res) => {
 		console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from '${req.socket.remoteAddress}'`);
 
-		if (req.url === "/api/trains") {
-			handleEndpointTrains(req, res);
+		if (req.url === "/api/stationsInfo") {
+			handleEndpointStationsInfo(req, res);
 		} else {
 			handleEndpointStatic(req, res);
 		}
